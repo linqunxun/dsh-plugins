@@ -47,6 +47,9 @@ window.__ModuleLoader__.load({
 				display: flex; align-items: center; justify-content: center;
 				color: #ffd76a; font-size: 20px; font-weight: 700;
 			}
+			/* Fallback avatar when no image: sign-coloured, +$ gold / -$ red. */
+			.dsh-income-avatar.pos { background: linear-gradient(135deg, #4a3a1a, #6b5520); border-color: rgba(255,200,60,.85); color: #ffd76a; font-size: 15px; letter-spacing: -1px; }
+			.dsh-income-avatar.neg { background: linear-gradient(135deg, #4a1a1a, #6b2020); border-color: rgba(255,120,100,.8); color: #ff8a7a; font-size: 15px; letter-spacing: -1px; }
 			.dsh-income-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 			.dsh-income-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; white-space: nowrap; }
 			.dsh-income-sub { font-size: 11px; color: rgba(255,255,255,.6); line-height: 1.2; white-space: nowrap; max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
@@ -94,6 +97,7 @@ window.__ModuleLoader__.load({
 			{ id: "zuckerberg", name: { zh: "马克·扎克伯格", en: "Mark Zuckerberg" }, bio: { zh: "Meta创始人", en: "Meta founder" }, perSec: 2000, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/F20250904AH-2824_%2854778373111%29_%283x4_cropped_on_Zuckerberg_following_the_rule_of_thirds%29.jpg/330px-F20250904AH-2824_%2854778373111%29_%283x4_cropped_on_Zuckerberg_following_the_rule_of_thirds%29.jpg" },
 			{ id: "huang", name: { zh: "黄仁勋", en: "Jensen Huang" }, bio: { zh: "英伟达创始人", en: "NVIDIA founder" }, perSec: 2900, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Jen-Hsun_Huang_2025.jpg/330px-Jen-Hsun_Huang_2025.jpg" },
 			{ id: "ma", name: { zh: "马云", en: "Jack Ma" }, bio: { zh: "阿里巴巴创始人", en: "Alibaba founder" }, perSec: 300, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/20th_Anniversary_Schwab_Foundation_Gala_Dinner_%2844887783681%29_%28cropped%29.jpg/330px-20th_Anniversary_Schwab_Foundation_Gala_Dinner_%2844887783681%29_%28cropped%29.jpg" },
+			{ id: "jiayueting", name: { zh: "贾跃亭", en: "Jia Yueting" }, bio: { zh: "乐视与FF创始人", en: "LeEco & FF founder" }, perSec: -500 },
 			{ id: "swift", name: { zh: "泰勒·斯威夫特", en: "Taylor Swift" }, bio: { zh: "流行天后", en: "Pop superstar" }, perSec: 45, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png/330px-Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png" },
 			{ id: "ronaldo", name: { zh: "C罗", en: "Cristiano Ronaldo" }, bio: { zh: "足坛传奇", en: "Football legend" }, perSec: 30, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg/330px-Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg" },
 			{ id: "messi", name: { zh: "梅西", en: "Lionel Messi" }, bio: { zh: "足坛GOAT", en: "Football GOAT" }, perSec: 25, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg/330px-Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg" },
@@ -213,13 +217,14 @@ window.__ModuleLoader__.load({
 				const zh = lang === "zh";
 				const name = person.name[zh ? "zh" : "en"];
 				const bio = person.bio[zh ? "zh" : "en"];
-				const initial = (name || bio).charAt(0).toUpperCase();
+				const signCls = person.perSec >= 0 ? " pos" : " neg";
+				const fallbackText = person.perSec >= 0 ? "+$" : "-$";
 				const fmt = (n) => n.toLocaleString("en-US", {
 					minimumFractionDigits: 2,
 					maximumFractionDigits: 2
 				});
-				const avatar = imgErr
-					? react.createElement("div", { className: "dsh-income-avatar" }, initial)
+				const avatar = !person.avatar || imgErr
+					? react.createElement("div", { className: "dsh-income-avatar" + signCls }, fallbackText)
 					: react.createElement("img", {
 						className: "dsh-income-avatar",
 						key: person.id,
