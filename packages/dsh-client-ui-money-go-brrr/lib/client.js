@@ -12,7 +12,7 @@
 // - Language follows the system/browser locale: Chinese when it starts with
 //   "zh", English otherwise.
 window.__ModuleLoader__.load({
-	id: "dsh-client-ui-money-counter",
+	id: "dsh-client-ui-money-go-brrr",
 	factory: (require) => {
 		var module = { exports: {} };
 		var exports = module.exports;
@@ -51,6 +51,7 @@ window.__ModuleLoader__.load({
 			.dsh-income-avatar.pos { background: linear-gradient(135deg, #4a3a1a, #6b5520); border-color: rgba(255,200,60,.85); color: #ffd76a; font-size: 15px; letter-spacing: -1px; }
 			.dsh-income-avatar.neg { background: linear-gradient(135deg, #4a1a1a, #6b2020); border-color: rgba(255,120,100,.8); color: #ff8a7a; font-size: 15px; letter-spacing: -1px; }
 			.dsh-income-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+			.dsh-income-title { font-size: 11px; font-weight: 800; color: #ffd76a; letter-spacing: 1px; line-height: 1.2; white-space: nowrap; }
 			.dsh-income-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; white-space: nowrap; }
 			.dsh-income-sub { font-size: 11px; color: rgba(255,255,255,.6); line-height: 1.2; white-space: nowrap; max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
 			.dsh-income-total {
@@ -115,6 +116,14 @@ window.__ModuleLoader__.load({
 		// restarts; on mount the offline gap is caught up at the last person's rate.
 		const STORAGE_KEY = "dsh-income-counter.v1";
 		const BASE_TOTAL = 128888.66;
+
+		/** Pick a random person different from the current one (or any, if fewer than 2). */
+		function pickPerson(current) {
+			if (PEOPLE.length <= 1) return 0;
+			let next = Math.floor(Math.random() * PEOPLE.length);
+			if (next === current) next = (next + 1) % PEOPLE.length;
+			return next;
+		}
 		//#endregion
 
 		/** Required services: overlay registration only. */
@@ -156,7 +165,7 @@ window.__ModuleLoader__.load({
 							if (typeof d.total === "number" && typeof d.lastTs === "number") saved = d;
 						}
 					} catch (e) { /* fresh start */ }
-					let idx = 0;
+					let idx = pickPerson(-1);
 					if (saved !== null) {
 						const found = PEOPLE.findIndex((p) => p.id === saved.personId);
 						if (found >= 0) idx = found;
@@ -188,11 +197,11 @@ window.__ModuleLoader__.load({
 					return () => window.clearInterval(timer);
 				}, []);
 
-				// Rotate to the next person every 8s (total keeps accumulating).
+				// Pick a random person every 8s (total keeps accumulating).
 				// Depends on rotNonce: a manual click bumps it, restarting the timer.
 				react.useEffect(() => {
 					const timer = window.setInterval(() => {
-						indexRef.current = (indexRef.current + 1) % PEOPLE.length;
+						indexRef.current = pickPerson(indexRef.current);
 						setIndex(indexRef.current);
 						setImgErr(false);
 						setImgReady(false);
@@ -248,7 +257,7 @@ window.__ModuleLoader__.load({
 						className: "dsh-income-card",
 						title: zh ? "点击切换人物" : "Click to switch person",
 						onClick: () => {
-							indexRef.current = (indexRef.current + 1) % PEOPLE.length;
+							indexRef.current = pickPerson(indexRef.current);
 							setIndex(indexRef.current);
 							setImgErr(false);
 							setImgReady(false);
@@ -271,7 +280,7 @@ window.__ModuleLoader__.load({
 				name: "shell.overlay",
 				id: "money-counter",
 				order: 100,
-				label: "\u6BCF\u79D2\u6536\u5165"
+				label: "\u52A0\u6CB9\uFF01\u6253\u5DE5\u4EBA"
 			}, MoneyCounter));
 		}
 
