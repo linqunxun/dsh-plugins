@@ -1,7 +1,7 @@
 {
   "name": "dsh-client-ui-money-counter",
-  "description": "Bottom-right per-second income card for well-known people (avatars, bilingual)",
-  "version": "0.2.0",
+  "description": "Bottom-right forever-earning card: per-second income of well-known people shown as money+ particles, persistent grand total, system-language aware",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "main": "lib/index.js",
@@ -17,8 +17,7 @@
   "dsh": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-locale"
+        "@deepseek-ai/dsh-client-runtime"
       ],
       "platform": "web"
     }
