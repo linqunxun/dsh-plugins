@@ -1,19 +1,22 @@
 # dsh-plugins
 
-DeepSeek Harness (DSH) 客户端 UI 插件集合。
+[简体中文](./README.zh.md) · English
 
-## 插件列表
+DeepSeek Harness (DSH) client UI plugins collection.
+
+## Plugins
 
 ### dsh-client-ui-money-go-brrr
 
-Money go brrr — 右下角「持续入账」动效卡片：轮播全球知名人物（含明星与亏损人物），按每人每秒收入实时累计总金额，金钱+ 飘字展示入账/亏损，总金额永久累积且跟随系统语言。
+Money go brrr — a bottom-right "keep printing cash" card: rotates through famous people (tech founders, athletes, even net-worth-losers), accumulates a grand total at each person's real per-second income, shows money+ particles (gold gains / red losses), never resets across refreshes or restarts, and follows your system language.
 
-> 每秒收入为基于公开净资产数据的粗略估算，仅供娱乐。
+> Per-second incomes are rough estimates based on public figures, for entertainment only.
 
-## 安装
+## Install
 
-把 `packages/dsh-client-ui-money-go-brrr` 复制到任意 DSH web profile 的
-`packages/` 目录，在 profile 的 `package.json` 中加入依赖：
+Copy `packages/dsh-client-ui-money-go-brrr` into any DSH web profile's
+`packages/` directory, then add the dependency to the profile's
+`package.json`:
 
 ```json
 {
@@ -23,7 +26,7 @@ Money go brrr — 右下角「持续入账」动效卡片：轮播全球知名�
 }
 ```
 
-然后在 profile 的 `cordis.patch.yml` 注册插件行：
+Register the plugin row in the profile's `cordis.patch.yml`:
 
 ```yaml
 - insert:
@@ -31,11 +34,10 @@ Money go brrr — 右下角「持续入账」动效卡片：轮播全球知名�
       name: 'dsh-client-ui-money-go-brrr'
 ```
 
-最后在 profile 目录运行 `pnpm install` 并重启 `dsh web`。
+Then run `pnpm install` in the profile directory and restart `dsh web`.
 
-## 开发
+## Development
 
-浏览器端 bundle 采用 DSH web 应用标准的
-`window.__ModuleLoader__.load({ id, factory })` 格式（见
-`lib/client.js`），由 `client-modules` 服务在
-`/plugins/<id>/client.js` 提供。
+The browser bundle uses the standard DSH web format
+`window.__ModuleLoader__.load({ id, factory })` (see `lib/client.js`),
+served by the `client-modules` service at `/plugins/<id>/client.js`.
