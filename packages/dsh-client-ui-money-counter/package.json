@@ -1,7 +1,7 @@
 {
   "name": "dsh-client-ui-money-counter",
-  "description": "Bottom-right forever-earning card: per-second income of well-known people shown as money+ particles, persistent grand total, system-language aware",
-  "version": "0.3.0",
+  "description": "加油！打工人 — bottom-right earning card: per-second income of well-known people shown as money+ particles, persistent grand total, system-language aware",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "main": "lib/index.js",

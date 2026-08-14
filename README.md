@@ -4,7 +4,7 @@ DeepSeek Harness (DSH) 客户端 UI 插件集合。
 
 ## 插件列表
 
-### dsh-client-ui-money-counter
+### 加油！打工人（dsh-client-ui-money-counter）
 
 右下角「持续入账」动效卡片：轮播全球知名人物（含明星与亏损人物），按每人每秒收入实时累计总金额，金钱+ 飘字展示入账/亏损，总金额永久累积且跟随系统语言。
 
