@@ -65,6 +65,11 @@ window.__ModuleLoader__.load({
 				white-space: nowrap; opacity: 0; pointer-events: none;
 				animation: dsh-income-float 2s ease-out forwards;
 			}
+			.dsh-income-p.neg {
+				color: #ff8a7a;
+				border-color: rgba(255,120,100,.45);
+				text-shadow: 0 1px 4px rgba(120,20,10,.7);
+			}
 			@keyframes dsh-income-float {
 				0%   { opacity: 0; transform: translate(-50%, 0) scale(.85); }
 				15%  { opacity: 1; }
@@ -76,9 +81,10 @@ window.__ModuleLoader__.load({
 			}
 		`;
 
-		// Rough per-second income estimates based on public net-worth figures.
+		// Rough per-second income estimates (public figures, entertainment only).
+		// perSec may be negative (wealth-losing people make the total shrink).
 		// Avatars are Wikipedia portrait thumbnails (hotlink-friendly).
-		// bio is a one-line tagline (≤15 chars in each language) shown under the name.
+		// bio is a one-line tagline (≤15 chars in each language) under the name.
 		const PEOPLE = [
 			{ id: "musk", name: { zh: "埃隆·马斯克", en: "Elon Musk" }, bio: { zh: "特斯拉与SpaceX创始人", en: "Tesla & SpaceX founder" }, perSec: 2700, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Elon_Musk_-_54820081119_%28cropped%29.jpg/330px-Elon_Musk_-_54820081119_%28cropped%29.jpg" },
 			{ id: "trump", name: { zh: "唐纳德·特朗普", en: "Donald Trump" }, bio: { zh: "美国第45、47任总统", en: "45th & 47th US President" }, perSec: 40, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg/330px-Official_Presidential_Portrait_of_President_Donald_J._Trump_%282025%29.jpg" },
@@ -87,7 +93,16 @@ window.__ModuleLoader__.load({
 			{ id: "buffett", name: { zh: "沃伦·巴菲特", en: "Warren Buffett" }, bio: { zh: "伯克希尔掌门人", en: "Berkshire chairman" }, perSec: 800, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Warren_Buffett_at_the_2015_SelectUSA_Investment_Summit_%28cropped%29.jpg/330px-Warren_Buffett_at_the_2015_SelectUSA_Investment_Summit_%28cropped%29.jpg" },
 			{ id: "zuckerberg", name: { zh: "马克·扎克伯格", en: "Mark Zuckerberg" }, bio: { zh: "Meta创始人", en: "Meta founder" }, perSec: 2000, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/F20250904AH-2824_%2854778373111%29_%283x4_cropped_on_Zuckerberg_following_the_rule_of_thirds%29.jpg/330px-F20250904AH-2824_%2854778373111%29_%283x4_cropped_on_Zuckerberg_following_the_rule_of_thirds%29.jpg" },
 			{ id: "huang", name: { zh: "黄仁勋", en: "Jensen Huang" }, bio: { zh: "英伟达创始人", en: "NVIDIA founder" }, perSec: 2900, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Jen-Hsun_Huang_2025.jpg/330px-Jen-Hsun_Huang_2025.jpg" },
-			{ id: "ma", name: { zh: "马云", en: "Jack Ma" }, bio: { zh: "阿里巴巴创始人", en: "Alibaba founder" }, perSec: 300, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/20th_Anniversary_Schwab_Foundation_Gala_Dinner_%2844887783681%29_%28cropped%29.jpg/330px-20th_Anniversary_Schwab_Foundation_Gala_Dinner_%2844887783681%29_%28cropped%29.jpg" }
+			{ id: "ma", name: { zh: "马云", en: "Jack Ma" }, bio: { zh: "阿里巴巴创始人", en: "Alibaba founder" }, perSec: 300, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/20th_Anniversary_Schwab_Foundation_Gala_Dinner_%2844887783681%29_%28cropped%29.jpg/330px-20th_Anniversary_Schwab_Foundation_Gala_Dinner_%2844887783681%29_%28cropped%29.jpg" },
+			{ id: "swift", name: { zh: "泰勒·斯威夫特", en: "Taylor Swift" }, bio: { zh: "流行天后", en: "Pop superstar" }, perSec: 45, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png/330px-Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png" },
+			{ id: "ronaldo", name: { zh: "C罗", en: "Cristiano Ronaldo" }, bio: { zh: "足坛传奇", en: "Football legend" }, perSec: 30, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg/330px-Cristiano_Ronaldo_Croatia_v_Portugal_2_July_2026-075_%28cropped%29.jpg" },
+			{ id: "messi", name: { zh: "梅西", en: "Lionel Messi" }, bio: { zh: "足坛GOAT", en: "Football GOAT" }, perSec: 25, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg/330px-Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg" },
+			{ id: "lebron", name: { zh: "勒布朗·詹姆斯", en: "LeBron James" }, bio: { zh: "NBA现役巨星", en: "NBA superstar" }, perSec: 20, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/LeBron_James_%2851959977144%29_%28cropped2%29.jpg/330px-LeBron_James_%2851959977144%29_%28cropped2%29.jpg" },
+			{ id: "mbappe", name: { zh: "姆巴佩", en: "Kylian Mbappé" }, bio: { zh: "法国天才前锋", en: "French ace forward" }, perSec: 15, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg/330px-Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg" },
+			{ id: "cook", name: { zh: "蒂姆·库克", en: "Tim Cook" }, bio: { zh: "苹果公司CEO", en: "Apple CEO" }, perSec: 2, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Tim_Cook_March_2026_%28cropped_2%29.jpg/330px-Tim_Cook_March_2026_%28cropped_2%29.jpg" },
+			{ id: "luo", name: { zh: "罗永浩", en: "Luo Yonghao" }, bio: { zh: "锤子科技创始人", en: "Smartisan founder" }, perSec: -60, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Luo_Yonghao_at_BIT%2C_2010-cropped.JPG/330px-Luo_Yonghao_at_BIT%2C_2010-cropped.JPG" },
+			{ id: "sbf", name: { zh: "山姆·班克曼", en: "Sam Bankman-Fried" }, bio: { zh: "FTX破产创始人", en: "Ex-FTX founder" }, perSec: -400, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Sam_Bankman-Fried_%28cropped%29.png/330px-Sam_Bankman-Fried_%28cropped%29.png" },
+			{ id: "holmes", name: { zh: "伊丽莎白·霍姆斯", en: "Elizabeth Holmes" }, bio: { zh: "Theranos创始人", en: "Theranos founder" }, perSec: -150, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Elizabeth_Holmes_2014_cropped.jpg/330px-Elizabeth_Holmes_2014_cropped.jpg" }
 		];
 
 		// Durable grand-total state. localStorage survives page refreshes and
@@ -179,12 +194,12 @@ window.__ModuleLoader__.load({
 					return () => window.clearInterval(timer);
 				}, [rotNonce]);
 
-				// Money+ particles: one per second, average amount ≈ perSec,
-				// so the +effect adds exactly at the person's real per-second rate.
+				// Money+ particles: one per second, amount = the person's exact
+				// per-second income (positive adds, negative subtracts).
 				react.useEffect(() => {
 					const timer = window.setInterval(() => {
 						const id = ++seqRef.current;
-						const amt = PEOPLE[indexRef.current].perSec * (0.85 + Math.random() * 0.3);
+						const amt = PEOPLE[indexRef.current].perSec;
 						const dx = Math.round(Math.random() * 60 - 30);
 						setParticles((ps) => [...ps.slice(-5), { id, amt, dx }]);
 						window.setTimeout(() => {
@@ -219,9 +234,9 @@ window.__ModuleLoader__.load({
 					react.createElement("style", null, CSS),
 					particles.map((p) => react.createElement("div", {
 						key: p.id,
-						className: "dsh-income-p",
+						className: "dsh-income-p" + (p.amt < 0 ? " neg" : ""),
 						style: { marginLeft: p.dx + "px" }
-					}, "+$" + fmt(p.amt))),
+					}, (p.amt < 0 ? "-$" : "+$") + fmt(Math.abs(p.amt)))),
 					react.createElement("div", {
 						className: "dsh-income-card",
 						title: zh ? "点击切换人物" : "Click to switch person",
@@ -238,7 +253,7 @@ window.__ModuleLoader__.load({
 							react.createElement("div", { className: "dsh-income-name" }, name),
 							react.createElement("div", { className: "dsh-income-sub" }, bio),
 							react.createElement("div", { className: "dsh-income-total" },
-								(zh ? "已入账 $" : "earned $") + fmt(total)
+								(zh ? "已入账 $" : "earned $") + (total < 0 ? "-" : "") + fmt(Math.abs(total))
 							)
 						)
 					)
