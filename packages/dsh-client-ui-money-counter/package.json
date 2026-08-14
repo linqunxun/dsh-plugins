@@ -1,7 +1,7 @@
 {
   "name": "dsh-client-ui-money-counter",
-  "description": "Bottom-right money counter overlay: a continuously increasing balance with floating +¥ particles",
-  "version": "0.1.0",
+  "description": "Bottom-right per-second income card for well-known people (avatars, bilingual)",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "lib/index.js",
@@ -17,7 +17,8 @@
   "dsh": {
     "client": {
       "inject": [
-        "@deepseek-ai/dsh-client-runtime"
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-locale"
       ],
       "platform": "web"
     }
