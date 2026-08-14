@@ -1,10 +1,16 @@
 // Browser half of the money-counter plugin, packaged in the client bundle
 // format the web app serves at /plugins/<id>/client.js.
 //
-// Simulates the per-second income of well-known people: shows the person's
-// avatar, name (active locale), their per-second rate, and the total earned
-// since this person was selected. Rotates through the roster every 8s;
-// clicking the card switches to the next person.
+// A bottom-right card that keeps earning money forever:
+// - Shows a well-known person (avatar + bilingual name), rotated every 8s.
+// - A "+$X" particle floats up continuously — the average particle amount
+//   matches that person's per-second income, so the rate shows in the
+//   money+ effect itself (no rate text on the card).
+// - The grand total NEVER resets: it keeps accumulating across person
+//   switches, page refreshes and restarts (persisted in localStorage; the
+//   offline gap is caught up at the last person's rate).
+// - Language follows the system/browser locale: Chinese when it starts with
+//   "zh", English otherwise.
 window.__ModuleLoader__.load({
 	id: "dsh-client-ui-money-counter",
 	factory: (require) => {
@@ -20,6 +26,7 @@ window.__ModuleLoader__.load({
 				pointer-events: none; user-select: none;
 			}
 			.dsh-income-card {
+				position: relative;
 				display: flex; align-items: center; gap: 12px;
 				padding: 10px 16px 10px 12px; border-radius: 16px;
 				background: linear-gradient(135deg, rgba(22,22,30,.94), rgba(34,30,20,.94));
@@ -43,13 +50,22 @@ window.__ModuleLoader__.load({
 			.dsh-income-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 			.dsh-income-name { font-size: 14px; font-weight: 700; color: #fff; line-height: 1.2; white-space: nowrap; }
 			.dsh-income-sub { font-size: 11px; color: rgba(255,255,255,.55); line-height: 1.2; white-space: nowrap; }
-			.dsh-income-rate {
-				font-size: 12px; color: #ffd76a; font-weight: 600; line-height: 1.3; white-space: nowrap;
-			}
 			.dsh-income-total {
 				font-size: 17px; font-weight: 800; color: #ffe9a8; line-height: 1.3;
 				font-variant-numeric: tabular-nums; white-space: nowrap;
 				text-shadow: 0 0 12px rgba(255,200,60,.45);
+			}
+			.dsh-income-p {
+				position: absolute; bottom: 52px; left: 50%;
+				font-size: 14px; font-weight: 700; color: #ffd76a;
+				text-shadow: 0 1px 4px rgba(0,0,0,.5);
+				white-space: nowrap; opacity: 0; pointer-events: none;
+				animation: dsh-income-float 1.5s ease-out forwards;
+			}
+			@keyframes dsh-income-float {
+				0%   { opacity: 0; transform: translate(-50%, 0) scale(.85); }
+				18%  { opacity: 1; }
+				100% { opacity: 0; transform: translate(-50%, -92px) scale(1.08); }
 			}
 			@keyframes dsh-income-in {
 				0%   { opacity: 0; transform: translateY(8px) scale(.95); }
@@ -70,86 +86,150 @@ window.__ModuleLoader__.load({
 			{ id: "ma", name: { zh: "马云", en: "Jack Ma" }, perSec: 300, avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/20th_Anniversary_Schwab_Foundation_Gala_Dinner_%2844887783681%29_%28cropped%29.jpg/330px-20th_Anniversary_Schwab_Foundation_Gala_Dinner_%2844887783681%29_%28cropped%29.jpg" }
 		];
 
+		// Durable grand-total state. localStorage survives page refreshes and
+		// restarts; on mount the offline gap is caught up at the last person's rate.
+		const STORAGE_KEY = "dsh-income-counter.v1";
+		const BASE_TOTAL = 128888.66;
 		//#endregion
 
-		/** Required services: overlay registration and active-locale reading. */
-		const inject = ["slots", "locale"];
+		/** Required services: overlay registration only. */
+		const inject = ["slots"];
 
 		/** Client plugin body: register the bottom-right overlay entry. */
 		function apply(ctx) {
 			/**
-			* Bottom-right per-second income card for one well-known person.
-			* Defined inside apply so it closes over the plugin ctx (the static
-			* client bundle has no ambient ctx at module scope).
+			* Bottom-right earning card. Defined inside apply so it closes over
+			* the plugin ctx (the static client bundle has no ambient ctx at
+			* module scope).
 			*/
 			function MoneyCounter() {
-				const [localeId, setLocaleId] = react.useState("zh");
+				const [lang, setLang] = react.useState("zh");
 				const [index, setIndex] = react.useState(0);
-				const [startAt, setStartAt] = react.useState(() => Date.now());
-				const [now, setNow] = react.useState(() => Date.now());
+				const [total, setTotal] = react.useState(BASE_TOTAL);
+				const [particles, setParticles] = react.useState([]);
 				const [imgErr, setImgErr] = react.useState(false);
+				const [imgReady, setImgReady] = react.useState(true);
+				const indexRef = react.useRef(0);
+				const totalRef = react.useRef(BASE_TOTAL);
+				const lastTsRef = react.useRef(Date.now());
+				const seqRef = react.useRef(0);
 
+				// System/browser language: Chinese when it starts with "zh".
 				react.useEffect(() => {
-					const locale = ctx.get("locale");
-					if (locale === undefined) return;
-					setLocaleId(locale.getLocale().active);
-					return locale.subscribe(() => setLocaleId(locale.getLocale().active));
+					const navLang = String(window.navigator.language || "en").toLowerCase();
+					setLang(navLang.startsWith("zh") ? "zh" : "en");
 				}, []);
 
+				// Load persisted total and catch up the offline gap.
 				react.useEffect(() => {
-					const timer = window.setInterval(() => setNow(Date.now()), 100);
+					let saved = null;
+					try {
+						const raw = window.localStorage.getItem(STORAGE_KEY);
+						if (raw !== null) {
+							const d = JSON.parse(raw);
+							if (typeof d.total === "number" && typeof d.lastTs === "number") saved = d;
+						}
+					} catch (e) { /* fresh start */ }
+					let idx = 0;
+					if (saved !== null) {
+						const found = PEOPLE.findIndex((p) => p.id === saved.personId);
+						if (found >= 0) idx = found;
+						const gap = Math.max(0, (Date.now() - saved.lastTs) / 1000);
+						totalRef.current = saved.total + gap * PEOPLE[idx].perSec;
+					}
+					indexRef.current = idx;
+					lastTsRef.current = Date.now();
+					setIndex(idx);
+					setTotal(totalRef.current);
+				}, []);
+
+				// Tick: keep earning at the current person's rate, persist often.
+				react.useEffect(() => {
+					const timer = window.setInterval(() => {
+						const now = Date.now();
+						const delta = Math.max(0, (now - lastTsRef.current) / 1000);
+						totalRef.current += delta * PEOPLE[indexRef.current].perSec;
+						lastTsRef.current = now;
+						setTotal(totalRef.current);
+						try {
+							window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+								total: totalRef.current,
+								lastTs: now,
+								personId: PEOPLE[indexRef.current].id
+							}));
+						} catch (e) { /* storage full/unavailable */ }
+					}, 100);
 					return () => window.clearInterval(timer);
 				}, []);
 
+				// Rotate to the next person every 8s (total keeps accumulating).
 				react.useEffect(() => {
 					const timer = window.setInterval(() => {
-						setIndex((i) => (i + 1) % PEOPLE.length);
-						setStartAt(Date.now());
+						indexRef.current = (indexRef.current + 1) % PEOPLE.length;
+						setIndex(indexRef.current);
 						setImgErr(false);
+						setImgReady(false);
 					}, 8000);
 					return () => window.clearInterval(timer);
 				}, []);
 
+				// Money+ particles: spawn ~2.5/s, average amount ≈ perSec,
+				// so the per-second income shows in the +effect itself.
+				react.useEffect(() => {
+					const timer = window.setInterval(() => {
+						const id = ++seqRef.current;
+						const amt = PEOPLE[indexRef.current].perSec * 0.4 * (0.7 + Math.random() * 0.6);
+						const dx = Math.round(Math.random() * 60 - 30);
+						setParticles((ps) => [...ps.slice(-7), { id, amt, dx }]);
+						window.setTimeout(() => {
+							setParticles((ps) => ps.filter((p) => p.id !== id));
+						}, 1600);
+					}, 400);
+					return () => window.clearInterval(timer);
+				}, []);
+
 				const person = PEOPLE[index];
-				const elapsed = Math.max(0, (now - startAt) / 1000);
-				const total = elapsed * person.perSec;
+				const zh = lang === "zh";
+				const name = person.name[zh ? "zh" : "en"];
+				const sub = person.name[zh ? "en" : "zh"];
+				const initial = (sub || name).charAt(0).toUpperCase();
 				const fmt = (n) => n.toLocaleString("en-US", {
 					minimumFractionDigits: 2,
 					maximumFractionDigits: 2
 				});
-				const rate = person.perSec.toLocaleString("en-US");
-				const zh = localeId === "zh";
-				const name = person.name[zh ? "zh" : "en"];
-				const sub = person.name[zh ? "en" : "zh"];
-				const initial = (sub || name).charAt(0).toUpperCase();
 				const avatar = imgErr
 					? react.createElement("div", { className: "dsh-income-avatar" }, initial)
 					: react.createElement("img", {
 						className: "dsh-income-avatar",
+						key: person.id,
 						src: person.avatar,
 						alt: name,
-						onError: () => setImgErr(true)
+						style: { opacity: imgReady ? 1 : 0, transition: "opacity .3s ease" },
+						onError: () => setImgErr(true),
+						onLoad: () => setImgReady(true)
 					});
 
 				return react.createElement("div", { className: "dsh-income" },
 					react.createElement("style", null, CSS),
+					particles.map((p) => react.createElement("div", {
+						key: p.id,
+						className: "dsh-income-p",
+						style: { marginLeft: p.dx + "px" }
+					}, "+$" + fmt(p.amt))),
 					react.createElement("div", {
 						className: "dsh-income-card",
-						key: person.id,
 						title: zh ? "点击切换人物" : "Click to switch person",
 						onClick: () => {
-							setIndex((i) => (i + 1) % PEOPLE.length);
-							setStartAt(Date.now());
+							indexRef.current = (indexRef.current + 1) % PEOPLE.length;
+							setIndex(indexRef.current);
 							setImgErr(false);
+							setImgReady(false);
 						}
 					},
 						avatar,
 						react.createElement("div", { className: "dsh-income-body" },
 							react.createElement("div", { className: "dsh-income-name" }, name),
 							react.createElement("div", { className: "dsh-income-sub" }, sub),
-							react.createElement("div", { className: "dsh-income-rate" },
-								zh ? "每秒收入 ≈ $" + rate : "per second ≈ $" + rate
-							),
 							react.createElement("div", { className: "dsh-income-total" },
 								(zh ? "已入账 $" : "earned $") + fmt(total)
 							)
