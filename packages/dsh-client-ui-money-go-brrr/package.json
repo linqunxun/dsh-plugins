@@ -1,7 +1,7 @@
 {
-  "name": "dsh-client-ui-money-counter",
-  "description": "加油！打工人 — bottom-right earning card: per-second income of well-known people shown as money+ particles, persistent grand total, system-language aware",
-  "version": "0.4.0",
+  "name": "dsh-client-ui-money-go-brrr",
+  "description": "Money go brrr — a bottom-right card that keeps printing cash for you: famous people's per-second income as money+ particles, grand total that never resets.",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "main": "lib/index.js",

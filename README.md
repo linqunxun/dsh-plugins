@@ -4,21 +4,21 @@ DeepSeek Harness (DSH) 客户端 UI 插件集合。
 
 ## 插件列表
 
-### 加油！打工人（dsh-client-ui-money-counter）
+### dsh-client-ui-money-go-brrr
 
-右下角「持续入账」动效卡片：轮播全球知名人物（含明星与亏损人物），按每人每秒收入实时累计总金额，金钱+ 飘字展示入账/亏损，总金额永久累积且跟随系统语言。
+Money go brrr — 右下角「持续入账」动效卡片：轮播全球知名人物（含明星与亏损人物），按每人每秒收入实时累计总金额，金钱+ 飘字展示入账/亏损，总金额永久累积且跟随系统语言。
 
 > 每秒收入为基于公开净资产数据的粗略估算，仅供娱乐。
 
 ## 安装
 
-把 `packages/dsh-client-ui-money-counter` 复制到任意 DSH web profile 的
+把 `packages/dsh-client-ui-money-go-brrr` 复制到任意 DSH web profile 的
 `packages/` 目录，在 profile 的 `package.json` 中加入依赖：
 
 ```json
 {
   "dependencies": {
-    "dsh-client-ui-money-counter": "file:./packages/dsh-client-ui-money-counter"
+    "dsh-client-ui-money-go-brrr": "file:./packages/dsh-client-ui-money-go-brrr"
   }
 }
 ```
@@ -27,8 +27,8 @@ DeepSeek Harness (DSH) 客户端 UI 插件集合。
 
 ```yaml
 - insert:
-    - id: ui-money-counter
-      name: 'dsh-client-ui-money-counter'
+    - id: ui-money-go-brrr
+      name: 'dsh-client-ui-money-go-brrr'
 ```
 
 最后在 profile 目录运行 `pnpm install` 并重启 `dsh web`。

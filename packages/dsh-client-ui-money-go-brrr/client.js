@@ -12,7 +12,7 @@
 // - Language follows the system/browser locale: Chinese when it starts with
 //   "zh", English otherwise.
 window.__ModuleLoader__.load({
-	id: "dsh-client-ui-money-counter",
+	id: "dsh-client-ui-money-go-brrr",
 	factory: (require) => {
 		var module = { exports: {} };
 		var exports = module.exports;
@@ -258,9 +258,6 @@ window.__ModuleLoader__.load({
 					},
 						avatar,
 						react.createElement("div", { className: "dsh-income-body" },
-							react.createElement("div", { className: "dsh-income-title" },
-								zh ? "加油！打工人" : "Keep going, worker!"
-							),
 							react.createElement("div", { className: "dsh-income-name" }, name),
 							react.createElement("div", { className: "dsh-income-sub" }, bio),
 							react.createElement("div", { className: "dsh-income-total" },
